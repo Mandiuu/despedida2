@@ -499,8 +499,7 @@ button:disabled { opacity: 0.4; cursor: not-allowed; }
 <script>
 const FORM_URL = 'https://docs.google.com/forms/d/e/1FAIpQLScGxfCM9nUsSFmkxaHLBHZGtOaxEfoKYaoAdGFrQVMbZKA73Q/formResponse';
 const ENTRY    = 'entry.406758502';
-const CSV_URL  = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vTNLOqw9LQoXBNLKX4Ic5-9AXEpMe38gIGgL2JEUcOdBpACpUl8a-uuT-ZpgV1B_MvFzJw4y_XURFsO/pub?output=csv';
-
+const CSV_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vTNLOqw9LQoXBNLKX4Ic5-9AXEpMe38gIGgL2JEUcOdBpACpUl8a-uuT-ZpgV1B_MvFzJw4y_XURFsO/pub?gid=1167867745&single=true&output=csv';
 async function cargarInscritos() {
   try {
     const res  = await fetch(CSV_URL + '&t=' + Date.now());
