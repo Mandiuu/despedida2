@@ -85,28 +85,7 @@ body::before {
 .corner-br { bottom: 8px; right: 12px; content: '◆'; }
 .corner-bl { bottom: 8px; left: 12px; content: '◆'; }
 
-/* DOOR */
-.door {
-  position: absolute;
-  bottom: -3px;
-  left: 50%;
-  transform: translateX(-50%);
-  width: 60px;
-  height: 3px;
-  background: var(--bg);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-.door::after {
-  content: '[ ENTRADA ]';
-  position: absolute;
-  bottom: -18px;
-  font-size: 9px;
-  letter-spacing: 2px;
-  color: var(--muted);
-  white-space: nowrap;
-}
+
 
 /* HEADER */
 .room-label {
@@ -490,7 +469,7 @@ button:disabled { opacity: 0.4; cursor: not-allowed; }
       </ul>
     </div>
 
-    <div class="div-line" data-label="FIN DEL MENSAJE"></div>
+    <div class="div-line"></div>
 
     <div class="footer">Hecho con ♥ por Carla M.</div>
   </div>
