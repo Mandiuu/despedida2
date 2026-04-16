@@ -1,0 +1,563 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Escape Room — Despedida de Seba 2</title>
+<link href="https://fonts.googleapis.com/css2?family=Special+Elite&family=Courier+Prime:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #1a1610;
+  --paper: #2a2318;
+  --line: #4a3f28;
+  --amber: #c8902a;
+  --red: #c0392b;
+  --green: #2ecc71;
+  --text: #e8d9b0;
+  --muted: #7a6a48;
+}
+
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: 'Courier Prime', monospace;
+  min-height: 100vh;
+  padding: 40px 20px 80px;
+  position: relative;
+  overflow-x: hidden;
+}
+
+
+/* SCANLINE OVERLAY */
+body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  background: repeating-linear-gradient(
+    0deg,
+    transparent,
+    transparent 2px,
+    rgba(0,0,0,0.07) 2px,
+    rgba(0,0,0,0.07) 4px
+  );
+  pointer-events: none;
+  z-index: 100;
+}
+
+/* ROOM MAP CONTAINER */
+.room {
+  max-width: 600px;
+  margin: 0 auto;
+  position: relative;
+  z-index: 10;
+}
+
+/* ROOM WALLS */
+.walls {
+  border: 3px solid var(--amber);
+  border-radius: 2px;
+  padding: 40px 36px;
+  position: relative;
+  background: rgba(42,35,24,0.92);
+  box-shadow:
+    inset 0 0 60px rgba(0,0,0,0.5),
+    0 0 40px rgba(200,144,42,0.12);
+}
+
+.walls::before, .walls::after {
+  content: '◆';
+  position: absolute;
+  color: var(--amber);
+  font-size: 10px;
+  opacity: 0.6;
+}
+.walls::before { top: 8px; left: 12px; }
+.walls::after  { top: 8px; right: 12px; }
+
+.corner-br, .corner-bl {
+  position: absolute;
+  color: var(--amber);
+  font-size: 10px;
+  opacity: 0.6;
+}
+.corner-br { bottom: 8px; right: 12px; content: '◆'; }
+.corner-bl { bottom: 8px; left: 12px; content: '◆'; }
+
+/* DOOR */
+.door {
+  position: absolute;
+  bottom: -3px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 60px;
+  height: 3px;
+  background: var(--bg);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.door::after {
+  content: '[ ENTRADA ]';
+  position: absolute;
+  bottom: -18px;
+  font-size: 9px;
+  letter-spacing: 2px;
+  color: var(--muted);
+  white-space: nowrap;
+}
+
+/* HEADER */
+.room-label {
+  font-size: 9px;
+  letter-spacing: 5px;
+  text-transform: uppercase;
+  color: var(--muted);
+  margin-bottom: 20px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.room-label::before, .room-label::after {
+  content: '';
+  flex: 1;
+  height: 1px;
+  background: var(--line);
+}
+
+h1 {
+  font-family: 'Special Elite', cursive;
+  font-size: clamp(28px, 7vw, 46px);
+  line-height: 1.1;
+  color: var(--text);
+  margin-bottom: 6px;
+}
+
+h1 em {
+  color: var(--amber);
+  font-style: normal;
+}
+
+.mission {
+  font-size: 12px;
+  color: var(--muted);
+  letter-spacing: 1px;
+  margin-bottom: 28px;
+  font-style: italic;
+}
+
+/* CLUE BOX */
+.clue-box {
+  border: 1px dashed var(--line);
+  padding: 14px 16px;
+  margin-bottom: 24px;
+  position: relative;
+  font-size: 13px;
+  line-height: 1.8;
+  color: var(--muted);
+}
+
+.clue-box::before {
+  content: '📍 PISTA';
+  position: absolute;
+  top: -8px;
+  left: 12px;
+  background: rgba(42,35,24,0.95);
+  padding: 0 6px;
+  font-size: 9px;
+  letter-spacing: 3px;
+  color: var(--amber);
+}
+
+.clue-box strong {
+  color: var(--text);
+  font-weight: 700;
+}
+
+/* CUPOS */
+.cupos-row {
+  display: flex;
+  align-items: baseline;
+  gap: 14px;
+  margin-bottom: 20px;
+  font-size: 12px;
+  color: var(--muted);
+}
+.cupos-count {
+  font-family: 'Special Elite', cursive;
+  font-size: 32px;
+  color: var(--amber);
+  line-height: 1;
+}
+.cupos-label { letter-spacing: 1px; }
+
+/* PROGRESS BAR */
+.progress-wrap {
+  height: 4px;
+  background: var(--line);
+  margin-bottom: 28px;
+  position: relative;
+}
+.progress-fill {
+  height: 100%;
+  background: var(--amber);
+  width: 0%;
+  transition: width 0.6s ease;
+}
+.progress-wrap::after {
+  content: 'CUPOS DISPONIBLES';
+  position: absolute;
+  right: 0;
+  top: -16px;
+  font-size: 8px;
+  letter-spacing: 3px;
+  color: var(--muted);
+}
+
+/* FORM */
+.form-area { margin-bottom: 28px; }
+
+.form-label {
+  font-size: 10px;
+  letter-spacing: 3px;
+  text-transform: uppercase;
+  color: var(--muted);
+  margin-bottom: 10px;
+  display: block;
+}
+
+.form-row { display: flex; gap: 10px; }
+
+input[type="text"] {
+  flex: 1;
+  font-family: 'Courier Prime', monospace;
+  font-size: 15px;
+  background: var(--bg);
+  border: 1px solid var(--line);
+  color: var(--text);
+  padding: 11px 14px;
+  outline: none;
+  transition: border-color 0.2s;
+}
+
+input[type="text"]:focus {
+  border-color: var(--amber);
+}
+
+input[type="text"]::placeholder {
+  color: var(--line);
+}
+
+button {
+  font-family: 'Courier Prime', monospace;
+  font-size: 13px;
+  letter-spacing: 2px;
+  background: var(--amber);
+  color: var(--bg);
+  border: none;
+  padding: 11px 18px;
+  cursor: pointer;
+  text-transform: uppercase;
+  font-weight: 700;
+  transition: opacity 0.2s;
+}
+
+button:hover { opacity: 0.85; }
+button:disabled { opacity: 0.4; cursor: not-allowed; }
+
+/* INSCRITOS LIST */
+.inscritos-label {
+  font-size: 10px;
+  letter-spacing: 3px;
+  text-transform: uppercase;
+  color: var(--muted);
+  margin-bottom: 12px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.inscritos-label::after {
+  content: '';
+  flex: 1;
+  height: 1px;
+  background: var(--line);
+}
+
+.inscritos-list {
+  list-style: none;
+  font-size: 13px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-bottom: 28px;
+}
+
+.inscritos-list li {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  color: var(--text);
+  padding: 6px 10px;
+  border-left: 2px solid var(--line);
+}
+
+.inscritos-list li .num {
+  color: var(--muted);
+  font-size: 11px;
+  min-width: 18px;
+}
+
+.inscritos-list li.nuevo {
+  border-left-color: var(--green);
+  animation: fadeIn 0.4s ease;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateX(-6px); }
+  to   { opacity: 1; transform: translateX(0); }
+}
+
+/* DIVIDER */
+.div-line {
+  height: 1px;
+  background: var(--line);
+  margin: 24px 0;
+  position: relative;
+}
+.div-line::after {
+  content: attr(data-label);
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  background: rgba(42,35,24,0.95);
+  padding: 0 10px;
+  font-size: 9px;
+  letter-spacing: 3px;
+  color: var(--muted);
+}
+
+/* SUCCESS MESSAGE */
+.success {
+  display: none;
+  background: rgba(46,204,113,0.08);
+  border: 1px solid var(--green);
+  padding: 14px 16px;
+  font-size: 13px;
+  color: var(--green);
+  margin-top: 12px;
+  letter-spacing: 0.5px;
+}
+
+/* FOOTER */
+.footer {
+  text-align: center;
+  font-size: 10px;
+  letter-spacing: 3px;
+  color: var(--line);
+  margin-top: 32px;
+  text-transform: uppercase;
+}
+
+/* BLINKING CURSOR */
+.cursor::after {
+  content: '█';
+  animation: blink 1s step-end infinite;
+  color: var(--amber);
+  font-size: 0.8em;
+  margin-left: 2px;
+}
+@keyframes blink { 50% { opacity: 0; } }
+
+/* STAMP */
+.stamp {
+  position: absolute;
+  top: 20px;
+  right: 20px;
+  width: 72px;
+  height: 72px;
+  border: 2px solid var(--amber);
+  border-radius: 50%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  opacity: 0.25;
+  transform: rotate(12deg);
+  font-size: 8px;
+  letter-spacing: 1px;
+  text-align: center;
+  color: var(--amber);
+  line-height: 1.6;
+  font-family: 'Special Elite', cursive;
+  pointer-events: none;
+}
+</style>
+</head>
+<body>
+
+<canvas id="matrixCanvas" style="position:fixed;inset:0;width:100%;height:100%;pointer-events:none;z-index:0;opacity:0.45;"></canvas>
+
+<script>
+(function(){
+  const canvas = document.getElementById('matrixCanvas');
+  const ctx = canvas.getContext('2d');
+  const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789@#$%&!?+-=><[]{}|/\\';
+  const fontSize = 14;
+  let cols, drops;
+
+  function init() {
+    canvas.width  = window.innerWidth;
+    canvas.height = window.innerHeight;
+    cols  = Math.floor(canvas.width / fontSize);
+    drops = Array.from({length: cols}, () => Math.random() * -canvas.height / fontSize);
+  }
+
+  function draw() {
+    // Fade trail
+    ctx.fillStyle = 'rgba(26,22,16,0.18)';
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+    for (let i = 0; i < cols; i++) {
+      const ch = chars[Math.floor(Math.random() * chars.length)];
+      const y  = drops[i] * fontSize;
+
+      // Lead character brighter
+      ctx.font        = `${fontSize}px Courier Prime, monospace`;
+      ctx.fillStyle   = '#f0c060';
+      ctx.fillText(ch, i * fontSize, y);
+
+      // Second char slightly dimmer
+      if (drops[i] > 1) {
+        ctx.fillStyle = '#c8902a';
+        const ch2 = chars[Math.floor(Math.random() * chars.length)];
+        ctx.fillText(ch2, i * fontSize, y - fontSize);
+      }
+
+      // Trail chars
+      ctx.fillStyle = 'rgba(200,144,42,0.3)';
+      for (let t = 2; t < 6; t++) {
+        const cht = chars[Math.floor(Math.random() * chars.length)];
+        ctx.fillText(cht, i * fontSize, y - t * fontSize);
+      }
+
+      // Reset drop randomly
+      if (y > canvas.height && Math.random() > 0.975) {
+        drops[i] = 0;
+      }
+      drops[i] += 0.5;
+    }
+  }
+
+  init();
+  window.addEventListener('resize', init);
+  setInterval(draw, 50);
+})();
+</script>
+
+<div class="room">
+  <div class="walls">
+    <span class="corner-br">◆</span>
+    <span class="corner-bl">◆</span>
+    <div class="door"></div>
+
+    <h1>Despedida de <em>Seba 2</em><span class="cursor"></span></h1>
+
+    <div class="clue-box">
+      <strong>📅 Jueves 30 de abril</strong> — la cuenta regresiva comienza<br>
+      <strong>🕐 Hora:</strong> por confirmar<br>
+      <strong>📍 Lugar:</strong> Fuga Escape Room · Rodó #1927, Providencia<br>
+      <strong>🔐 Modo:</strong> escape room + celebración
+    </div>
+
+    <div class="div-line" data-label="PARTICIPANTES"></div>
+
+    <div class="form-area">
+      <label class="form-label">► Ingresa tu nombre para anotarte</label>
+      <div class="form-row">
+        <input type="text" id="nameInput" placeholder="Nombre y apellido…" maxlength="60" />
+        <button id="submitBtn" onclick="inscribirse()">Me anoto</button>
+      </div>
+      <div class="success" id="successMsg">✓ ¡Anotado! Nos vemos en la misión, agente.</div>
+    </div>
+
+    <div>
+      <div class="inscritos-label">Agentes confirmados</div>
+      <ul class="inscritos-list" id="inscritosList">
+        <li><span class="num">—</span> <span style="color:var(--muted);font-style:italic;">Nadie aún. Sé el primero.</span></li>
+      </ul>
+    </div>
+
+    <div class="div-line" data-label="FIN DEL MENSAJE"></div>
+
+    <div class="footer">Hecho con ♥ por Carla M.</div>
+  </div>
+</div>
+
+<script>
+const FORM_URL = 'https://docs.google.com/forms/d/e/1FAIpQLScGxfCM9nUsSFmkxaHLBHZGtOaxEfoKYaoAdGFrQVMbZKA73Q/formResponse';
+const ENTRY    = 'entry.406758502';
+const CSV_URL  = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vTNLOqw9LQoXBNLKX4Ic5-9AXEpMe38gIGgL2JEUcOdBpACpUl8a-uuT-ZpgV1B_MvFzJw4y_XURFsO/pub?output=csv';
+
+async function cargarInscritos() {
+  try {
+    const res  = await fetch(CSV_URL + '&t=' + Date.now());
+    const text = await res.text();
+    const rows = text.trim().split('\n').slice(1); // saltar encabezado
+    return rows.map(r => r.split(',')[1]?.replace(/"/g,'').trim()).filter(Boolean);
+  } catch { return []; }
+}
+
+async function render(highlight) {
+  const inscritos = await cargarInscritos();
+  const list = document.getElementById('inscritosList');
+  if (inscritos.length === 0) {
+    list.innerHTML = '<li><span class="num">—</span> <span style="color:var(--muted);font-style:italic;">Nadie aún. Sé el primero.</span></li>';
+  } else {
+    list.innerHTML = inscritos.map((n, i) =>
+      `<li class="${n === highlight ? 'nuevo' : ''}">
+        <span class="num">${String(i+1).padStart(2,'0')}</span>
+        ${n}
+      </li>`
+    ).join('');
+  }
+}
+
+async function inscribirse() {
+  const input = document.getElementById('nameInput');
+  const name  = input.value.trim();
+  if (!name) { input.focus(); return; }
+
+  const btn = document.getElementById('submitBtn');
+  btn.disabled = true;
+  btn.textContent = 'Anotando…';
+
+  const body = new FormData();
+  body.append(ENTRY, name);
+
+  try {
+    await fetch(FORM_URL, { method: 'POST', mode: 'no-cors', body });
+  } catch {}
+
+  input.value = '';
+  btn.textContent = 'Me anoto';
+  btn.disabled = false;
+
+  document.getElementById('successMsg').style.display = 'block';
+  setTimeout(() => document.getElementById('successMsg').style.display = 'none', 3500);
+
+  // Esperar un momento para que Sheets se actualice
+  setTimeout(() => render(name), 2000);
+}
+
+// Enter key
+document.getElementById('nameInput').addEventListener('keydown', e => {
+  if (e.key === 'Enter') inscribirse();
+});
+
+// ── Init ─────────────────────────────────────────────────────
+render();
+setInterval(render, 30000); // refresca cada 30 seg</script>
+</body>
+</html>
