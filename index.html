@@ -505,8 +505,19 @@ async function cargarInscritos() {
   try {
     const res  = await fetch(CSV_URL + '&t=' + Date.now());
     const text = await res.text();
-    const rows = text.trim().split('\n').slice(1); // saltar encabezado
-    return rows.map(r => r.split(',')[1]?.replace(/"/g,'').trim()).filter(Boolean);
+    const rows = text.trim().split('\n').slice(1);
+    return rows.map(r => {
+      // Parser que maneja comas dentro de campos entre comillas
+      const cols = [];
+      let cur = '', inQ = false;
+      for (const c of r) {
+        if (c === '"') inQ = !inQ;
+        else if (c === ',' && !inQ) { cols.push(cur); cur = ''; }
+        else cur += c;
+      }
+      cols.push(cur);
+      return cols[1]?.trim();
+    }).filter(Boolean);
   } catch { return []; }
 }
 
